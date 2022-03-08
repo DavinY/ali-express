@@ -3,5 +3,8 @@ seeder:
   disabled: false # Optional. Set it to true if you want to disable execution of this file
 parsers:
  - page_type: listings
-   file: ./parsers/listings.rb
-   disabled: false # Optional
+  file: ./parsers/listings.rb
+  disabled: false
+ - page_type: products
+  file: ./parsers/products.rb
+  disabled: false
