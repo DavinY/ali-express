@@ -1,98 +1,56 @@
-# initialize nokogiri
-nokogiri = Nokogiri.HTML(content)
-# initialize an empty hash
+html = Nokogiri.HTML(content)
+
+# initialize empty hash
 product = {}
 
-#save the url
-product['url'] = page['vars']['url']
+# save the url
+url = page['url']
+product['url'] = url
 
-#save the category
+# save the category
 product['category'] = page['vars']['category']
 
-#extract title
-product['title'] = nokogiri.css('h1.product-title-text').text.strip
+# extract the product title
+product['title'] = html.css('h1.product-title-text').text.strip
 
-#extract product image
-product['image_url'] = nokogiri.at_css('.images-view-item img')['src']
+# extract product image
+image_url = html.at_css('.images-view-item img')
+product['image_url'] = image_url['src']
 
 #extract discount price
-discount_element = nokogiri.at_css('span#j-sku-discount-price')
-if discount_element
-  discount_low_price = discount_element.css('span').find{|span| span['itemprop'] == 'lowPrice' }
-  if discount_low_price
-    product['discount_low_price'] = discount_element.css('span').find{|span| span['itemprop'] == 'lowPrice' }.text.to_f
-    product['discount_high_price'] = discount_element.css('span').find{|span| span['itemprop'] == 'highPrice' }.text.to_f
-  else
-    product['discount_price'] = discount_element.text.to_f
-  end
+discount = html.at_css('div.product-price-current')
+
+if discount
+    pricestring = discount.text.to_s
+    price = pricestring.scan(/(\d+\.\d+)/)
+    product['discount_low_price'] = price.first[0].to_f.to_s
+    product['discount_high_price'] = price.last[0].to_f.to_s
+else
+    product['discount_price'] = price.to_f
 end
 
-#extract original price
-price_element = nokogiri.at_css('#j-sku-price')
-if price_element
-  price_array = price_element.text.strip.split('-')
-  if price_array.size > 1
-    product['original_low_price'], product['original_high_price'] = price_array.map{|price| price.strip.to_f }
-  else
-    product['original_price'] = price_array.first.strip.to_f
-  end
-end
+# extract product rating
+rating = html.at_css('.overview-rating-average')&.text
+product['rating'] = rating.to_f if rating
 
-#extract categories
-breadcrumb_categories = nokogiri.at_css('.ui-breadcrumb').text.strip
-categories = breadcrumb_categories.split('>').map{|category| category.strip }
-categories.delete('Home')
-product['categories'] = categories
+# extract count review
+reviews_count = html.at_css('span.product-reviewer-reviews')&.text
+product['reviews_count'] = reviews_count.to_s if reviews_count
 
-#extract SKUs
-skus_element = nokogiri.css('ul.sku-attr-list').find{|ul| ul['data-sku-prop-id'] == '14' }
-if skus_element
-  skus = skus_element.css('a').collect{|a| a['title'] }
-  product['skus'] = skus
-end
+# extract total orders
+order = html.at_css('span.product-reviewer-sold')&.text
+product['order'] = order.to_s if order
 
-#extract sizes
-sizes_element = nokogiri.css('ul.sku-attr-list').find{|ul| ul['data-sku-prop-id'] == '5' }
-if sizes_element
-  sizes = sizes_element.css('a').collect{|a| a.text.strip }
-  product['sizes'] = sizes
-end
+# extract sizes
+size_elem = html.css('ul.sku-property-list[2] li.sku-property-item')
 
-#extract rating and reviews
-rating_element = nokogiri.at_css('span.ui-rating-star')
-if rating_element
-  rating_value = rating_element.css('span').find{|span| span['itemprop'] == 'ratingValue' }
-  product['rating'] = rating_value.text.strip.to_f if rating_value
-  review_count = rating_element.css('span').find{|span| span['itemprop'] == 'reviewCount' }
-  product['reviews_count'] = review_count.text.strip.to_i if review_count
-end
-
-#extract orders count
-order_count_element = nokogiri.at_css('#j-order-num')
-if order_count_element
-  product['orders_count'] = order_count_element.text.strip.split(' ').first.to_i
-end
-
-#extract shipping info
-shipping_element = nokogiri.at_css('dl#j-product-shipping')
-if shipping_element
-  product['shipping_info'] = shipping_element.text.strip.gsub(/\s\s+/, ' ')
-end
-
-#extract return policy
-return_element = nokogiri.at_css('#j-seller-promise-list')
-if return_element
-  product['return_policy'] = return_element.at_css('.s-serve').text.strip
-end
-
-#extract guarantee
-guarantee_element = nokogiri.at_css('#serve-guarantees-detail')
-if guarantee_element
-  product['guarantee'] = guarantee_element.text.strip.gsub(/\s\s+/, ' ')
+if size_elem
+    size = size_elem.css('div.sku-property-text').collect{|s| s.text.strip}
+    product['size'] = size
 end
 
 # specify the collection where this record will be stored
 product['_collection'] = "products"
 
-# save the product to the job’s outputs
+# save the product to the job's outputs
 outputs << product
