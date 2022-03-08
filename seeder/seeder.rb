@@ -9,7 +9,7 @@ pages << {
       "goto_options": {
         "waitUntil": "domcontentloaded"
       }
-    }
+    },
     vars: {
       category: "Women's clothing"
     }
