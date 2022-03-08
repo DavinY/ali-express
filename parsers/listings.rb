@@ -1,8 +1,8 @@
 
-nokogiri = Nokogiri.HTML("https://www.aliexpress.com/category/100003109/women-clothing.html")
+nokogiri = Nokogiri.HTML(content)
 
 #load products
-products = nokogiri.css('.JIIxO a._3t7zg')
+products = nokogiri.css('.JIIxO')
 
 products.each do |product|
   a_element = product.at_css('a._3t7zg')
@@ -24,7 +24,7 @@ products.each do |product|
 end
 
 #load paginated links
-pagination_links = nokogiri.css('.next-pagination-list button.next-btn')
+pagination_links = nokogiri.css('button.next-btn')
 pagination_links
 
 pagination_links.each do |link|
