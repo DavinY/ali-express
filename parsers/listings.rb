@@ -1,45 +1,35 @@
+
 nokogiri = Nokogiri.HTML(content)
 
-# p nokogiri
-
-products = nokogiri.css("div.product-container div.JIIxO a._3t7zg")
-
+#load products
+products = nokogiri.css('.JIIxO a._3t7zg')
 products.each do |product|
-    
-    url = URI.join('https://www.aliexpress.com',product['href']).to_s.split('?').first
-    
-    
+  url = URI.join('https://www.aliexpress.com', product.attr('href')).to_s.split('?').first
+  if url =~ /\Ahttps?:\/\//i
     pages << {
         url: url,
-        page_type: "product",
-        fetch_type: "browser",
+        page_type: 'products',
+        fetch_type: 'browser',
         force_fetch: true,
-        vars:{
-            category: page['vars']['category'],
+        vars: {
+          category: page['vars']['category'],
+          url: url
         }
-    }
-   
+      }
+  end
 end
 
-total_page_summary = nokogiri.css(".total-page").text
-total_page = total_page_summary.scan(/\d+/).first.to_i
+#load paginated links
+pagination_links = nokogiri.css('button.next-btn')
+pagination_links
 
-2.upto(total_page) do |i|
-    if i < 11
-        url = "https://www.aliexpress.com/category/100003109/women-clothing.html?page=#{i}"
-        pages << {
-            method: "GET",
-            fetch_type: "browser",
-            headers: {"User-Agent" => "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"},
-            vars: {
-                category: "Women's clothing"
-            },
-            url:url,
-            page_type: "listings",
-            display: {
-                "width": 1920,
-                "height": 3300
-            }
-        }
-    end
+pagination_links.each do |link|
+  l_val = link.text.strip
+  if l_val !~ /next|previous/i && l_val.to_i < 11 #limit pagination to 10 pages
+    url = URI.join('https:', link['href']).to_s.split('?').first
+    pages << {
+        url: url,
+        page_type: 'listings'
+      }
+  end
 end
