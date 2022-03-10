@@ -1,7 +1,18 @@
 seeder:
-  file: ./seeder/seeder.rb
-  disabled: false # Optional. Set it to true if you want to disable execution of this file
+    file: ./seeder/seeder.rb
+    disabled: false
+  
 parsers:
- - page_type: listings
-   file: ./parsers/listings.rb
-   disabled: false # Optional
+  - file: ./parsers/listings.rb
+    page_type: listings
+    disabled: false
+
+  - file: ./parsers/product.rb
+    page_type: product
+    disabled: false
+
+exporters:
+  - file: ./exporters/products_json.yaml
+    disabled: false
+  - file: ./exporters/products_csv.yaml
+    disabled: false
